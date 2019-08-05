@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Dart",
-            "program": "bin/main.dart",
+            "program": "example/b1serviceflayer_example.dart",
             "request": "launch",
             "type": "dart"
         }
