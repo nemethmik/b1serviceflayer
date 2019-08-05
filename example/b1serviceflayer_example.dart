@@ -7,7 +7,7 @@ main() async {
   const pwd ="123qwe";
   const companyDB ="SBODEMOUS";
   final b1s = B1ServiceLayer(B1Connection(serverUrl: url, 
-    companyDB: companyDB, userName: user, password: pwd));
+    companyDB: companyDB, userName: user, password: pwd),printLogins: true);
   try {
     print("Logging in ...");
     await b1s.loginAsync().timeout(const Duration(seconds: 10));
@@ -16,7 +16,7 @@ main() async {
     String activitiesJson = await b1s.queryAsync("Activities");
     Map<String, dynamic> activitiesMap = json.decode(activitiesJson);
     List<dynamic> activityList = activitiesMap["value"];
-    print('Number of activities ${activityList.length}');
+    print('${activityList.length} activities returned in ${b1s.exetutionMilliseconds} ms');
     activityList.forEach((activity){
       print('Activity ${activity["ActivityCode"]} Completed ${activity["Status"]} Notes ${activity["Notes"]} ');
     });
@@ -31,12 +31,12 @@ main() async {
     print("Fetching updated activity ...");
     String activityJson = await b1s.queryAsync("Activities($activityCodeToComplete)");
     Map<String, dynamic> activityMap = json.decode(activityJson);
-    print('Activity ${activityMap["ActivityCode"]} Completed ${activityMap["Status"]} Notes ${activityMap["Notes"]} ');
+    print('Activity ${activityMap["ActivityCode"]} Completed ${activityMap["Status"]} Notes ${activityMap["Notes"]} in ${b1s.exetutionMilliseconds} ms');
 
     print("Adding a new activity ...");
     activityJson = await addActivity(b1s, 12);
     activityMap = json.decode(activityJson);
-    print('Activity created with code ${activityMap["ActivityCode"]} Notes ${activityMap["Notes"]}');
+    print('Activity created with code ${activityMap["ActivityCode"]} Notes ${activityMap["Notes"]} in ${b1s.exetutionMilliseconds} ms');
 
     print("Deleting the new activity ...");
     activityCodeToComplete = activityMap["ActivityCode"];
@@ -46,7 +46,7 @@ main() async {
     activitiesJson = await b1s.queryAsync("Activities");
     activitiesMap = json.decode(activitiesJson);
     activityList = activitiesMap["value"];
-    print('Number of activities ${activityList.length}');
+    print('Number of activities ${activityList.length} returned in ${b1s.exetutionMilliseconds} ms');
     activityList.forEach((activity){
       print('Activity ${activity["ActivityCode"]} Completed ${activity["Status"]} Notes ${activity["Notes"]} ');
     });

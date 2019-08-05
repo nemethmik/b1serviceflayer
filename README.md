@@ -1,67 +1,43 @@
-A library for Dart developers that makes SAP BusinessOne (B1) Service Layer (SL) programming a lot simpler than using plain http package. B1 is one of the most popular information systems for small and mid sized companies. It runs on Microsoft SQL Server as well as on SAP HANA. SL is available only for the HANA version.
+A library for Dart developers that makes [SAP BusinessOne](https://www.sap.com/products/business-one.html)(B1) Service Layer (SL) programming a lot simpler than using plain http package. B1 is one of the most popular information systems for small and mid sized companies. It runs on Microsoft SQL Server as well as on SAP HANA. SL is available only for the HANA version. B1 is a commercial product, and if you want to be a developer, you should contact a SAP Partner or SAP to become a partner. This Dart package is only for developers who are part of this community. If you work for a company that already has B1, this package could be very helpful, too, for building custom applications, since then you are entitled to use SL.
+[Official Service Layer documentation](https://help.sap.com/doc/0d2533ad95ba4ad7a702e83570a21c32/9.3/en-US/Working_with_SAP_Business_One_Service_Layer.pdf) is available only if you have an S user ID. On the other hand, a six part [Service Layer API video](https://www.youtube.com/watch?v=zaF_i7x9-s0&list=PLMdHXbewhZ2QsgYSICRQuoL8lkoEHjNzS&index=22) is publicly available.
+
 The f in the name was inspired by the name sqflite.
 
 Created from templates made available by Stagehand under a BSD-style
 [license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
 
+SAP, SAP Business One are registered trademarks of [SAP](https://www.sap.com/corporate/en/company.html)  
+
 ## Usage
 
-A simple usage example:
+For a full working example review the example folder as well as the nice collection of automated Dart test scripts in the test folder.
+Here is a typical skeleton of an application using the functionality of the package:
 
 ```dart
 import 'dart:convert';
 import 'package:b1serviceflayer/b1serviceflayer.dart';
 
 main() async {
-  const url = "http://hana93srv:50001/b1s/v1/";
-  const user = "manager";
-  const pwd ="manager";
-  const companyDB ="SBODEMOUS";
-  final b1s = B1ServiceLayer(B1Connection(serverUrl: url, companyDB: companyDB, userName: user, password: pwd));
-  try {
-    print("Logging in ...");
+  ...
+  final b1s = B1ServiceLayer(B1Connection(serverUrl: url, 
+    companyDB: companyDB, userName: user, password: pwd));
+  try {    
     await b1s.loginAsync().timeout(const Duration(seconds: 10));
-
-    print("Querying activities ...");
+    ...
     String activitiesJson = await b1s.queryAsync("Activities");
     Map<String, dynamic> activitiesMap = json.decode(activitiesJson);
-    List<dynamic> activityList = activitiesMap["value"];
-    print('Number of activities ${activityList.length}');
-    activityList.forEach((activity){
-      print('Activity ${activity["ActivityCode"]} Completed ${activity["Status"]} Notes ${activity["Notes"]} ');
-    });
-
-    print("Updating activity ...");
-    int activityCodeToComplete = activityList[0]["ActivityCode"];
-    activityList[0]["Status"] = -3;
-    activityList[0]["Notes"] = "Completed on ${DateTime.now()}";
+    ...
     await b1s.updateAsync(entityName: "Activities($activityCodeToComplete)",
       entityJSON: json.encode(activityList[0]));
-
-    print("Fetching updated activity ...");
+    ...
     String activityJson = await b1s.queryAsync("Activities($activityCodeToComplete)");
-    Map<String, dynamic> activityMap = json.decode(activityJson);
-    print('Activity ${activityMap["ActivityCode"]} Completed ${activityMap["Status"]} Notes ${activityMap["Notes"]} ');
-
-    print("Adding a new activity ...");
-    activityJson = await addActivity(b1s, 12);
-    activityMap = json.decode(activityJson);
-    print('Activity created with code ${activityMap["ActivityCode"]} Notes ${activityMap["Notes"]}');
-
-    print("Deleting the new activity ...");
-    activityCodeToComplete = activityMap["ActivityCode"];
-    await b1s.deleteAsync(entityName: "Activities($activityCodeToComplete)", errorWhenDoesntExist: true);
-
-    print("Querying activities with newly added activity...");
-    activitiesJson = await b1s.queryAsync("Activities");
-    activitiesMap = json.decode(activitiesJson);
-    activityList = activitiesMap["value"];
-    print('Number of activities ${activityList.length}');
-    activityList.forEach((activity){
-      print('Activity ${activity["ActivityCode"]} Completed ${activity["Status"]} Notes ${activity["Notes"]} ');
-    });
-
-    print("Logging out ...");
+    ...
+    activityJson =   return await b1s.createAsync(entityName: "Activities",
+      entityJSON: json.encode(activityData));
+    ...
+    await b1s.deleteAsync(entityName: "Activities($activityCodeToComplete)",
+      errorWhenDoesntExist: true);
+    ...
     await b1s.logoutAsync();
   } on B1Error catch(exception) {
       print("Exception is B1Error (${exception.statusCode}) ${exception.error.message.value} (${exception.error.code}) for Query ${exception.queryUrl}");
@@ -70,37 +46,45 @@ main() async {
     print(exception); print(stackTrace);
   }
 }
-Future<String> addActivity(B1ServiceLayer b1s, int userId) async {
-  final Map<String,dynamic> activityData = {};
-  //Subject:-1, ActivityType: -1 /*General*/, Status: -2 /*NotStarted, -3=Completed*/,
-  activityData["Notes"] = "A new job to do";
-  activityData["ActivityDate"] = "${DateTime.now()}";
-  activityData["ActivityTime"] = "08:08:08"; //Activity creation date/time
-  activityData["StartDate"] =  "${DateTime(2019,9,7)}"; //Automatically convert Dates and Times to strings in POST/PUT/PATCH
-  activityData["StartTime"] = "10:10"; //UTC 0 offset, not the local time :(
-  activityData["Details"] = "${DateTime.now()}: more explanation";
-  activityData["ActivityType"] = -1;
-  activityData["Activity"] = cn_Task;
-  activityData["Priority"] = "pr_High";
-  activityData["PersonalFlag"] = tNO;
-  activityData["DurationType"] = "du_Hours"; 
-  activityData["Duration"] = 48.0;
-  activityData["HandledBy"] =  userId; //A user number
-  return await b1s.createAsync(entityName: "Activities",
-    entityJSON: json.encode(activityData));
-}
 ```
+All SL invocation is performed via the regular, and brilliant, Dart [http](https://pub.dev/packages/http) package.
+All functions return a Future, which can be used with the regular await keywords in an async body; this is the reason all function names is suffixed with Async as reminder, that these should be invoket with await, or the classic Future handling ways.
+
+The main class is **B1ServiceLayer**, which requires a **B1Connection** object. The B1Connection is initialiyed with the four mandatory SL login parameters.
+Here is the list of the functions:
+- **loginAsync** the library automatically calls login when the session is expired after 30 minutes. So, all subsequent calls of the same service layer object use the same connection, but after 30 minutes, a relogin is automatically performed. 
+- **queryAsync** returns a list of objects or a single one, depending on the query string.
+- **createAsync** creates an B1 entity object in B1, and returns the full details of the created object.
+- **updateAsync** updates a B1 entity object. Make sure to pass only the values that you really want to update, otherwise you may overwrite some valuable data by mistake.
+- **deleteAsync** deletes a B1 entity object. Very few objects are allowed to be deleted in SAP. Activities are very good for tests, since they are deletable.
+- **logoutAsync** Sessions are automatically timeouted in B1 SL, so calling logout is required only when the user is changed.
+
+Only *queryAsync* and *createAsync* have return value, a JSON string, which can be parsed with the dart **json.decode** function into a **Map<String,dynamic>**. 
+The functions *createAsync* and *updateAsync* are expecting JSON strings as input parameters. The **json.encode** function can be used to concvert Map<String,dynamic> objects into JSON strings.
+These functions are meant for rudimentary JSON communication, they don't parse the JSON string, except the error responses. This layer gives the ultimate performance, as much as possible with the SL and Dart infrastructure. If you want a higher level of convenience you can use JSON Dart conversion generators. For example, the B1Error class was generated with [quicktype](https://app.quicktype.io), but other tools can be used either. Pay attention, however that the B1 JSON structures are big, and a performance may be a problem with these code generators.  
+
+In future versions additional functions are added for batch execution, image uploading.
+
+You can use the Future's **timeout** to control the tolerable duration in your application. I was experimenting with using the *connectionTimeout* of the HttpClient of dart:io, but the Future timeout is a lot more convenient.
+When SL returns an error response, B1ServiceLayer functions throw **B1Error**. Upon timeout or network errors the corresponding exceptions are thrown by the underlying Dart machinery. B1Error has a nice bunch of properties for error analysis, which makes programming clean.
+
+## Performance
+Here is a log of the sample application from the example folder:
+```
+Logging in ...
+Querying activities ...
+9 activities returned in 5274 ms
+Activity 8 Completed -3 Notes Completed on 2019-08-05 21:17:13.951161 in 53 ms
+Activity created with code 15 Notes A new job to do in 147 ms
+Querying activities with newly added activity...
+Number of activities 9 returned in 102 ms
+```
+The first operation was slow, even after an explicit login, but then the performance was quite acceptable.
 
 ## License
-Copyright 2019 Miklos Nemeth (Tiva11)
+The license is an open source BSD license as suggested by the [Dart package publishing documentation](https://dart.dev/tools/pub/publishing), since Dart itself has BSD license. 
 
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+See the [LICENSE.md](https://github.com/nemethmik/b1serviceflayer/blob/master/LICENSE.md) file.
 
 ## Features and bugs
 

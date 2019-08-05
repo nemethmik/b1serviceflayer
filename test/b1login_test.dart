@@ -14,6 +14,7 @@ void main() {
         companyDB: conf.companyDB, userName: conf.user, password: conf.pwd));
       try {
         final sessionId = await b1s.loginAsync().timeout(const Duration(seconds: 15));
+        print("Execution time ${b1s.exetutionMilliseconds}");
         expect(sessionId.b1connection,isNotNull);
       } on B1Error catch(exception) {
         print("Exception is B1Error (${exception.statusCode}) ${exception.error.message.value} (${exception.error.code}) for Query ${exception.queryUrl}");
@@ -35,7 +36,7 @@ void main() {
       try {
         final sessionId = await b1s.loginAsync();
         expect(sessionId,isNull);
-      } catch(exception,stackTrace) {
+      } catch(exception) {
         if(exception is B1Error) {
           print("Exception is B1Error (${exception.statusCode}) ${exception.error.message.value} (${exception.error.code}) for Query ${exception.queryUrl} Payload ${exception.postBody}");
         }
@@ -43,7 +44,7 @@ void main() {
       }
     }); 
     test("LoginAttemptWithInvalidURL", () async {
-      //final b1s = B1Services(serverUrl:ipAddress + url + "krikszkraksz", userName: user, password: pwd, companyDB: companyDB);
+      //(401) Invalid session. (301)
       final b1s = B1ServiceLayer(B1Connection(serverUrl: conf.ipAddress + conf.url + "krikszkraksz",
         companyDB: conf.companyDB, userName: conf.user, password: conf.pwd));
       try {
@@ -57,7 +58,6 @@ void main() {
       }
     });
     test("LoginAttemptWithInvalidCompanyDB", () async {
-      // final b1s = B1Services(serverUrl: ipAddress + url, userName: user, password: pwd, companyDB: "krikszkraksz");
       final b1s = B1ServiceLayer(B1Connection(serverUrl: conf.ipAddress + conf.url,
         companyDB: "krikszkraksz", userName: conf.user, password: conf.pwd));
       try {
@@ -71,7 +71,6 @@ void main() {
       }
     });
     test("LoginAttemptWithInvalidPassword", () async {
-      // final b1s = B1Services(serverUrl: ipAddress + url, userName: user, password: "krikszkraksz", companyDB: companyDB);
       final b1s = B1ServiceLayer(B1Connection(serverUrl: conf.ipAddress + conf.url,
         companyDB: conf.companyDB, userName: conf.user, password: "krikszkraksz"));
       try {
@@ -84,17 +83,18 @@ void main() {
       }
     });
     test("LoginAttemptWithFaultyIPAddress", () async {
-      // final b1s = B1Services(serverUrl: "http://192.168.250.92:50001" + url,userName:user, password:pwd, companyDB:companyDB);
+      //This is a long timeout error because of the underlying network layer's timeout
       final b1s = B1ServiceLayer(B1Connection(serverUrl: "http://192.168.250.92:50001" + conf.url,
         companyDB: conf.companyDB, userName: conf.user, password: conf.pwd));
       try {
         await b1s.loginAsync().timeout(const Duration(seconds: 5));
-      } catch(error,stactTrace) {
+      } catch(error) {
         print(error);
         expect(error,isNotNull);
       }
     },timeout: Timeout(Duration(minutes: 5)));
     test("Login with HTTPClient",() async {
+      //This is just a fun experiment with using the low level HttpClient
       try {
         final String postBody = '{"UserName":"${conf.user}", "Password":"${conf.pwd}", "CompanyDB":"${conf.companyDB}"}';
         final String queryUrl = conf.ipAddress + conf.url + "Login";

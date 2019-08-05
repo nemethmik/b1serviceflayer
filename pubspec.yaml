@@ -1,7 +1,7 @@
 name: b1serviceflayer
 description: A starting point for Dart libraries or applications.
-version: 1.0.0
-homepage: https://github.com/nemethmik
+version: 1.0.1
+homepage: https://github.com/nemethmik/b1serviceflayer
 author: Miklos Nemeth (Tiva11) <nemethmiklos1960@gmail.com>
 
 environment:
