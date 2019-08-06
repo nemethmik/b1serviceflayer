@@ -70,9 +70,9 @@ Future<String> addActivity(B1ServiceLayer b1s, int userId) async {
   activityData["StartTime"] = "10:10"; //UTC 0 offset, not the local time :(
   activityData["Details"] = "${DateTime.now()}: more explanation";
   activityData["ActivityType"] = -1;
-  activityData["Activity"] = cn_Task;
+  activityData["Activity"] = "cn_Task";
   activityData["Priority"] = "pr_High";
-  activityData["PersonalFlag"] = tNO;
+  activityData["PersonalFlag"] = BoYesNoEnum.tNO.value;
   activityData["DurationType"] = "du_Hours"; 
   activityData["Duration"] = 48.0;
   activityData["HandledBy"] =  userId; //A user number
