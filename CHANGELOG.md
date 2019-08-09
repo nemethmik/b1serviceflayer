@@ -13,3 +13,7 @@
 
 - tYES, tNO relocated into a new BoYesNoEnum class.
 - BoEnums abstract class was added as a base class for defining typesafe string enumeration types.
+
+## 1.0.3
+
+- Unfortunately, flutter_test depends on meta 1.1.6 today 2019.08.09 and I decremented the meta library version to 1.1.6.
